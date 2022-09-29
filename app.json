@@ -1,4 +1,9 @@
 {
   "name": "main",
-  "displayName": "MeteoApp"
+  "displayName": "MeteoApp",
+  "expo": {
+    "name": "MeteoApp",
+    "slug": "FlorianBEMEMeteoApp",
+    "sdkVersion": "45.0.0"
+  }
 }
