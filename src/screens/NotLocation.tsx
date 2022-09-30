@@ -7,6 +7,16 @@ import {
   Button,
 } from 'react-native';
 import React from 'react';
+import {LocationObject} from 'expo-location';
+import * as Location from 'expo-location';
+import {useDispatch, useSelector} from 'react-redux';
+
+import {
+  CLEAR_ERROR_MESSAGE,
+  SET_ERROR_MESSAGE,
+  SET_LOADING_PERMISSION,
+  SET_LOCATION,
+} from '../redux/slicer/app';
 
 const styles = StyleSheet.create({
   containerLoading: {
@@ -48,39 +58,71 @@ const styles = StyleSheet.create({
   },
 });
 
-const requestLocationPermission = async () => {
-  setLoadingPermission(true);
-  let {status} = await Location.requestForegroundPermissionsAsync();
+export default function NotLocation({navigation}: any) {
+  const dispatch = useDispatch();
 
-  if (status !== 'granted') {
-    setErrorMsg('Permission as denied is necessary to access this app.');
-  } else {
-    setErrorMsg(null);
-    let location = await Location.getCurrentPositionAsync({});
-    dispatch(SET_LOCATION(location));
-  }
-  setTimeout(() => {
-    setLoadingPermission(false);
-  }, 1000);
-};
+  const loadingPermission = useSelector(
+    (state: any) => state.appSlice.loadingPermission,
+  );
+  const errorMsg = useSelector(
+    (state: any) => state.appSlice.errorMessagePermission,
+  );
 
-export default function NotLocation() {
+  //   // à extraire car répéter dans le component App.tsx
+  //   const requestLocationPermission = async () => {
+  //     dispatch(SET_LOADING_PERMISSION(true));
+
+  //     try {
+  //       let {status} = await Location.requestForegroundPermissionsAsync();
+
+  //       if (status !== 'granted') {
+  //         dispatch(
+  //           SET_ERROR_MESSAGE(
+  //             'Permission as denied is necessary to access this app.',
+  //           ),
+  //         );
+  //       } else {
+  //         let location = await Location.getCurrentPositionAsync({});
+  //         if (!location) {
+  //           dispatch(
+  //             SET_ERROR_MESSAGE(
+  //               'Permission as denied is necessary to access this app.',
+  //             ),
+  //           );
+  //         }
+  //         dispatch(CLEAR_ERROR_MESSAGE());
+  //         dispatch(SET_LOCATION(location));
+  //       }
+  //     } catch (e) {
+  //       console.error(e);
+  //       dispatch(
+  //         SET_ERROR_MESSAGE(
+  //           'Permission as denied is necessary to access this app.',
+  //         ),
+  //       );
+  //     }
+
+  //     setTimeout(() => {
+  //       dispatch(SET_LOADING_PERMISSION(false));
+  //     }, 1000);
+  //   };
+
   return (
     <View style={styles.containerLoading}>
       <ImageBackground
-        source={require('./assets/other/loading.jpg')}
+        source={require('../assets/other/loading.jpg')}
         resizeMode="cover">
         <View style={{height: '100%'}}>
           <View style={styles.containerError}>
             <Image
               style={styles.logo}
-              source={require('./assets/other/logo.png')}
+              source={require('../assets/other/logo.png')}
             />
             <View>
               <Text style={styles.containerErrorText}>{errorMsg}</Text>
               <Button
                 title="Activate Location"
-                onPress={() => requestLocationPermission()}></Button>
+                onPress={() => navigation.navigate('Settings')}></Button>
             </View>
           </View>
         </View>

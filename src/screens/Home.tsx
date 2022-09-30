@@ -20,11 +20,17 @@ import {
   IMAGE_BY_STATUS,
 } from '../common/common';
 import {useDispatch, useSelector} from 'react-redux';
-import {SET_FORECAST_DAY, SET_WEATHER} from '../redux/slicer/app';
+import {
+  SET_ERROR_MESSAGE,
+  SET_FORECAST_DAY,
+  SET_WEATHER,
+} from '../redux/slicer/app';
 import Forecast from '../components/home/Forecast';
 
 export default function Home() {
+  console.log('home');
   const dispatch = useDispatch();
+  const [error, setError] = React.useState(false);
   const weather = useSelector((state: any) => state.appSlice.weather);
   const location = useSelector((state: any) => state.appSlice.getLocation);
 
@@ -42,22 +48,25 @@ export default function Home() {
   };
 
   const fetchWeather = async () => {
-    axios
-      .get(
-        getApiUrl(
-          location.coords.latitude,
-          location.coords.longitude,
-          API_KEY,
-          'weather',
-        ),
-      )
-      .then(res => {
-        dispatch(SET_WEATHER(res.data));
-        console.log(res.data);
+    if (location && API_KEY)
+      axios
+        .get(
+          getApiUrl(
+            location.coords.latitude,
+            location.coords.longitude,
+            API_KEY,
+            'weather',
+          ),
+        )
+        .then(res => {
+          dispatch(SET_WEATHER(res.data));
 
-        fadeIn(fadeAnimInfo);
-      })
-      .catch(err => console.log(err));
+          fadeIn(fadeAnimInfo);
+        })
+        .catch(err => {
+          dispatch(SET_ERROR_MESSAGE('Erreur'));
+          console.log('erreor');
+        });
 
     // const obj = {
     //   base: 'stations',
@@ -95,20 +104,25 @@ export default function Home() {
   };
 
   const fetchForcast = async () => {
-    axios
-      .get(
-        getApiUrl(
-          location.coords.latitude,
-          location.coords.longitude,
-          API_KEY,
-          'forecast',
-        ),
-      )
-      .then(res => {
-        dispatch(SET_FORECAST_DAY(res.data));
-        console.log(res.data);
-      })
-      .catch(err => console.log(err));
+    if (location && API_KEY)
+      axios
+        .get(
+          getApiUrl(
+            location.coords.latitude,
+            location.coords.longitude,
+            API_KEY,
+            'forecast',
+          ),
+        )
+        .then(res => {
+          dispatch(SET_FORECAST_DAY(res.data));
+          console.log(res.data);
+        })
+        .catch(err => {
+          dispatch(SET_ERROR_MESSAGE('Erreur'));
+          console.log(err);
+        });
+
     // const obj = {
     //   cod: '200',
     //   message: 0,
@@ -1124,7 +1138,7 @@ export default function Home() {
   useEffect(() => {
     fetchWeather();
     fetchForcast();
-  }, []);
+  }, [location]);
 
   useEffect(() => {
     if (!weather) {
@@ -1151,6 +1165,7 @@ export default function Home() {
       useNativeDriver: false,
     }).start();
   };
+  console.log(weather);
 
   return (
     <View>

@@ -5,6 +5,8 @@ const initialState: AppSlice = {
   getLocation: null,
   weather: null,
   forecast: null,
+  loadingPermission: false,
+  errorMessagePermission: null,
 };
 
 export const appSlice = createSlice({
@@ -20,6 +22,16 @@ export const appSlice = createSlice({
     SET_FORECAST_DAY: (state, action) => {
       state.forecast = [...action.payload.list];
     },
+    SET_LOADING_PERMISSION: (state, action) => {
+      state.loadingPermission = action.payload;
+    },
+    SET_ERROR_MESSAGE: (state, action) => {
+      console.log(action.payload);
+      state.errorMessagePermission = action.payload;
+    },
+    CLEAR_ERROR_MESSAGE: state => {
+      state.errorMessagePermission = null;
+    },
   },
 });
 
@@ -30,6 +42,13 @@ export const getWeather = (state: {appSlice: AppSlice}) =>
 export const getForecast = (state: {appSlice: AppSlice}) =>
   state.appSlice.weather;
 
-export const {SET_LOCATION, SET_WEATHER, SET_FORECAST_DAY} = appSlice.actions;
+export const {
+  SET_LOADING_PERMISSION,
+  SET_LOCATION,
+  SET_WEATHER,
+  SET_FORECAST_DAY,
+  SET_ERROR_MESSAGE,
+  CLEAR_ERROR_MESSAGE,
+} = appSlice.actions;
 
 export default appSlice.reducer;

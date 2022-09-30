@@ -39,4 +39,6 @@ interface AppSlice {
   getLocation: null | LocationObject;
   weather: null | Weather;
   forecast: null | Weather[];
+  loadingPermission: boolean;
+  errorMessagePermission: null | string;
 }

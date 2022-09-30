@@ -8,11 +8,10 @@ import {
   Button,
   ActivityIndicator,
 } from 'react-native';
-import {Provider, useDispatch} from 'react-redux';
+import {Provider, useDispatch, useSelector} from 'react-redux';
 
 import * as Location from 'expo-location';
 import {NavigationContainer} from '@react-navigation/native';
-import {LocationObject} from 'expo-location';
 
 import Home from './screens/Home';
 import Settings from './screens/Settings';
@@ -20,30 +19,70 @@ import Settings from './screens/Settings';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 
 import {store} from './redux/store';
-import {SET_LOCATION} from './redux/slicer/app';
+import {
+  CLEAR_ERROR_MESSAGE,
+  SET_ERROR_MESSAGE,
+  SET_LOADING_PERMISSION,
+  SET_LOCATION,
+} from './redux/slicer/app';
+import NotLocation from './screens/NotLocation';
 
 const Tab = createMaterialTopTabNavigator();
 
 const App = () => {
   const dispatch = useDispatch();
+  const loadingPermission = useSelector(
+    (state: any) => state.appSlice.loadingPermission,
+  );
+  const errorMsg = useSelector(
+    (state: any) => state.appSlice.errorMessagePermission,
+  );
 
-  const [locationSet, setLocation] = useState<LocationObject | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [loadingPermission, setLoadingPermission] = useState<boolean>(true);
-
+  // à extraire car répété
   const requestLocationPermission = async () => {
-    setLoadingPermission(true);
-    let {status} = await Location.requestForegroundPermissionsAsync();
+    dispatch(SET_LOADING_PERMISSION(true));
 
-    if (status !== 'granted') {
-      setErrorMsg('Permission as denied is necessary to access this app.');
-    } else {
-      setErrorMsg(null);
-      let location = await Location.getCurrentPositionAsync({});
-      dispatch(SET_LOCATION(location));
+    try {
+      let {status} = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== 'granted') {
+        dispatch(
+          SET_ERROR_MESSAGE(
+            'Permission as denied is necessary to access this app.',
+          ),
+        );
+      } else {
+        Location.getCurrentPositionAsync({})
+          .then(location => {
+            if (!location) {
+              dispatch(
+                SET_ERROR_MESSAGE(
+                  'Permission as denied is necessary to access this app.',
+                ),
+              );
+            }
+            dispatch(CLEAR_ERROR_MESSAGE());
+            dispatch(SET_LOCATION(location));
+          })
+          .catch(e => {
+            console.error(e);
+            dispatch(
+              SET_ERROR_MESSAGE(
+                'Permission as denied is necessary to access this app.',
+              ),
+            );
+          });
+      }
+    } catch (e) {
+      dispatch(
+        SET_ERROR_MESSAGE(
+          'Permission as denied is necessary to access this app.',
+        ),
+      );
     }
+
     setTimeout(() => {
-      setLoadingPermission(false);
+      dispatch(SET_LOADING_PERMISSION(false));
     }, 1000);
   };
 
@@ -74,26 +113,25 @@ const App = () => {
     );
   } else if (errorMsg && !loadingPermission) {
     return (
-      <View style={styles.containerLoading}>
-        <ImageBackground
-          source={require('./assets/other/loading.jpg')}
-          resizeMode="cover">
-          <View style={{height: '100%'}}>
-            <View style={styles.containerError}>
-              <Image
-                style={styles.logo}
-                source={require('./assets/other/logo.png')}
-              />
-              <View>
-                <Text style={styles.containerErrorText}>{errorMsg}</Text>
-                <Button
-                  title="Activate Location"
-                  onPress={() => requestLocationPermission()}></Button>
-              </View>
-            </View>
-          </View>
-        </ImageBackground>
-      </View>
+      <NavigationContainer>
+        <Tab.Navigator
+          initialRouteName="Home"
+          screenOptions={{
+            tabBarStyle: {display: 'none'},
+            swipeEnabled: false,
+          }}>
+          <Tab.Screen
+            name="Home"
+            component={NotLocation}
+            options={{tabBarLabel: 'Home'}}
+          />
+          <Tab.Screen
+            name="Settings"
+            component={Settings}
+            options={{tabBarLabel: 'Updates'}}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
     );
   } else {
     return (
@@ -102,6 +140,7 @@ const App = () => {
           initialRouteName="Home"
           screenOptions={{
             tabBarStyle: {display: 'none'},
+            swipeEnabled: false,
           }}>
           <Tab.Screen
             name="Home"
