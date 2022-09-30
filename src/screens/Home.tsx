@@ -1,4 +1,12 @@
-import {View, ImageBackground, StyleSheet, Text, Animated} from 'react-native';
+import {
+  View,
+  ImageBackground,
+  StyleSheet,
+  Text,
+  Animated,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import React, {useEffect, useRef} from 'react';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
@@ -48,7 +56,8 @@ export default function Home() {
   };
 
   const fetchWeather = async () => {
-    if (location && API_KEY)
+    const demo = true;
+    if (location && API_KEY && !demo) {
       axios
         .get(
           getApiUrl(
@@ -60,47 +69,50 @@ export default function Home() {
         )
         .then(res => {
           dispatch(SET_WEATHER(res.data));
-
+          console.log(res.data);
           fadeIn(fadeAnimInfo);
         })
         .catch(err => {
           dispatch(SET_ERROR_MESSAGE('Erreur'));
-          console.log('erreor');
         });
+    }
 
-    // const obj = {
-    //   base: 'stations',
-    //   clouds: {all: 0},
-    //   cod: 200,
-    //   coord: {lat: 47.8621, lon: 1.8974},
-    //   dt: 1664465149,
-    //   id: 2989611,
-    //   main: {
-    //     feels_like: 13.11,
-    //     humidity: 75,
-    //     pressure: 1002,
-    //     temp: 13.72,
-    //     temp_max: 14.51,
-    //     temp_min: 13.12,
-    //   },
-    //   name: 'Olivet',
-    //   sys: {
-    //     country: 'FR',
-    //     id: 2041405,
-    //     sunrise: 1664430500,
-    //     sunset: 1664473028,
-    //     type: 2,
-    //   },
-    //   timezone: 7200,
-    //   visibility: 10000,
-    //   weather: [
-    //     {description: 'ciel dégagé', icon: '01d', id: 801, main: 'Clear'},
-    //   ],
-    //   wind: {deg: 290, speed: 2.06},
-    // };
-    // dispatch(SET_WEATHER(obj));
+    if (demo) {
+      const obj = {
+        base: 'stations',
+        clouds: {all: 20},
+        cod: 200,
+        coord: {lat: 47.8621, lon: 1.8974},
+        dt: 1664537774,
+        id: 6434674,
+        main: {
+          feels_like: 15.25,
+          humidity: 58,
+          pressure: 1012,
+          temp: 16.07,
+          temp_max: 19.51,
+          temp_min: 14.84,
+        },
+        name: 'Olivet',
+        sys: {
+          country: 'FR',
+          id: 2041405,
+          sunrise: 1664516982,
+          sunset: 1664559304,
+          type: 2,
+        },
+        timezone: 7200,
+        visibility: 10000,
+        weather: [
+          {description: 'peu nuageux', icon: '02d', id: 400, main: 'Clouds'},
+        ],
+        wind: {deg: 240, speed: 3.09},
+      };
 
-    // fadeIn(fadeAnimInfo);
+      dispatch(SET_WEATHER(obj));
+
+      fadeIn(fadeAnimInfo);
+    }
   };
 
   const fetchForcast = async () => {
@@ -116,7 +128,6 @@ export default function Home() {
         )
         .then(res => {
           dispatch(SET_FORECAST_DAY(res.data));
-          console.log(res.data);
         })
         .catch(err => {
           dispatch(SET_ERROR_MESSAGE('Erreur'));
@@ -1152,7 +1163,7 @@ export default function Home() {
     // Will change fadeAnim value to 1 in 5 seconds
     Animated.timing(ref, {
       toValue: 1,
-      duration: 500,
+      duration: 100,
       useNativeDriver: false,
     }).start();
   };
@@ -1161,7 +1172,7 @@ export default function Home() {
     // Will change fadeAnim value to 0 in 3 seconds
     Animated.timing(ref, {
       toValue: 0,
-      duration: 500,
+      duration: 100,
       useNativeDriver: false,
     }).start();
   };
@@ -1169,7 +1180,7 @@ export default function Home() {
 
   return (
     <View>
-      {weather && (
+      {weather ? (
         <>
           <Animated.View
             style={[
@@ -1299,6 +1310,25 @@ export default function Home() {
             </ImageBackground>
           </Animated.View>
         </>
+      ) : (
+        <View style={styles.containerLoading}>
+          <ImageBackground
+            source={require('../assets/other/loading.jpg')}
+            resizeMode="cover">
+            <View style={{height: '100%'}}>
+              <View style={styles.containerError}>
+                <Image
+                  style={styles.logo}
+                  source={require('../assets/other/logo.png')}
+                />
+                <View>
+                  <Text style={styles.containerErrorText}>Loading</Text>
+                  <ActivityIndicator />
+                </View>
+              </View>
+            </View>
+          </ImageBackground>
+        </View>
       )}
     </View>
   );
@@ -1313,4 +1343,24 @@ const styles = StyleSheet.create({
   detailsContainer: {flexDirection: 'column', alignItems: 'center'},
   detailsContainerTitle: {fontWeight: '300', color: 'white', marginBottom: 2},
   detailsContainerText: {fontWeight: '400', color: 'white'},
+  containerLoading: {
+    height: '100%',
+    alignItems: 'stretch',
+    alignContent: 'stretch',
+    justifyContent: 'center',
+  },
+  containerError: {
+    paddingVertical: 24,
+    height: '100%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  containerErrorText: {
+    color: 'white',
+  },
+  logo: {
+    width: 200,
+    height: 100,
+    top: 12,
+  },
 });

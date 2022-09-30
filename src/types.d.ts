@@ -41,4 +41,6 @@ interface AppSlice {
   forecast: null | Weather[];
   loadingPermission: boolean;
   errorMessagePermission: null | string;
+  permission: boolean;
+  locationAuto: boolean;
 }

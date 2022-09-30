@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {Provider, useDispatch, useSelector} from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import * as Location from 'expo-location';
 import {NavigationContainer} from '@react-navigation/native';
@@ -24,6 +25,7 @@ import {
   SET_ERROR_MESSAGE,
   SET_LOADING_PERMISSION,
   SET_LOCATION,
+  SET_PERMISSION,
 } from './redux/slicer/app';
 import NotLocation from './screens/NotLocation';
 
@@ -37,48 +39,74 @@ const App = () => {
   const errorMsg = useSelector(
     (state: any) => state.appSlice.errorMessagePermission,
   );
+  const permission = useSelector((state: any) => state.appSlice.permission);
 
-  // à extraire car répété
+  // const getLocationInStorage = async () => {
+  //   try {
+  //     const value = await AsyncStorage.getItem('@locationSave');
+
+  //     if (value === null) {
+  //       dispatch(
+  //         SET_ERROR_MESSAGE('Location is necessary to access this app.'),
+  //       );
+  //     } else {
+  //       return value;
+  //     }
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // };
+
+  const getLocation = async () => {
+    Location.getCurrentPositionAsync({})
+      .then(location => {
+        if (!location) {
+          dispatch(
+            SET_ERROR_MESSAGE('Locationis necessary to access this app.'),
+          );
+        }
+        dispatch(CLEAR_ERROR_MESSAGE());
+        dispatch(SET_LOCATION(location));
+      })
+      .catch(e => {
+        console.error(e);
+        dispatch(
+          SET_ERROR_MESSAGE('Location is necessary to access this app.'),
+        );
+      });
+  };
+
   const requestLocationPermission = async () => {
     dispatch(SET_LOADING_PERMISSION(true));
 
-    try {
-      let {status} = await Location.requestForegroundPermissionsAsync();
+    const {status} = await Location.getForegroundPermissionsAsync();
+    if (status === 'granted') {
+      dispatch(SET_PERMISSION(true));
+      await getLocation();
+      dispatch(SET_LOADING_PERMISSION(false));
+      return;
+    } else {
+      try {
+        let {status} = await Location.requestForegroundPermissionsAsync();
 
-      if (status !== 'granted') {
+        if (status !== 'granted') {
+          dispatch(
+            SET_ERROR_MESSAGE(
+              'Permission as denied is necessary to access this app.',
+            ),
+          );
+        } else {
+          await getLocation();
+        }
+      } catch (e) {
         dispatch(
           SET_ERROR_MESSAGE(
             'Permission as denied is necessary to access this app.',
           ),
         );
-      } else {
-        Location.getCurrentPositionAsync({})
-          .then(location => {
-            if (!location) {
-              dispatch(
-                SET_ERROR_MESSAGE(
-                  'Permission as denied is necessary to access this app.',
-                ),
-              );
-            }
-            dispatch(CLEAR_ERROR_MESSAGE());
-            dispatch(SET_LOCATION(location));
-          })
-          .catch(e => {
-            console.error(e);
-            dispatch(
-              SET_ERROR_MESSAGE(
-                'Permission as denied is necessary to access this app.',
-              ),
-            );
-          });
+        // }
+        // }
       }
-    } catch (e) {
-      dispatch(
-        SET_ERROR_MESSAGE(
-          'Permission as denied is necessary to access this app.',
-        ),
-      );
     }
 
     setTimeout(() => {
@@ -88,7 +116,16 @@ const App = () => {
 
   useEffect(() => {
     requestLocationPermission();
+    // getData();
   }, []);
+
+  useEffect(() => {
+    if (permission) {
+      dispatch(SET_LOADING_PERMISSION(true));
+      getLocation();
+      dispatch(SET_LOADING_PERMISSION(false));
+    }
+  }, [permission]);
 
   if (loadingPermission) {
     return (
@@ -111,28 +148,6 @@ const App = () => {
         </ImageBackground>
       </View>
     );
-  } else if (errorMsg && !loadingPermission) {
-    return (
-      <NavigationContainer>
-        <Tab.Navigator
-          initialRouteName="Home"
-          screenOptions={{
-            tabBarStyle: {display: 'none'},
-            swipeEnabled: false,
-          }}>
-          <Tab.Screen
-            name="Home"
-            component={NotLocation}
-            options={{tabBarLabel: 'Home'}}
-          />
-          <Tab.Screen
-            name="Settings"
-            component={Settings}
-            options={{tabBarLabel: 'Updates'}}
-          />
-        </Tab.Navigator>
-      </NavigationContainer>
-    );
   } else {
     return (
       <NavigationContainer>
@@ -144,50 +159,11 @@ const App = () => {
           }}>
           <Tab.Screen
             name="Home"
-            component={Home}
-            options={{tabBarLabel: 'Home'}}
+            component={errorMsg && !loadingPermission ? NotLocation : Home}
           />
-          <Tab.Screen
-            name="Settings"
-            component={Settings}
-            options={{tabBarLabel: 'Updates'}}
-          />
+          <Tab.Screen name="Settings" component={Settings} />
         </Tab.Navigator>
       </NavigationContainer>
-
-      // <SafeAreaView style={backgroundStyle}>
-      //   <StatusBar
-      //     barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-      //     backgroundColor={backgroundStyle.backgroundColor}
-      //   />
-
-      //   {locationSet && (
-      //     <ScrollView
-      //       contentInsetAdjustmentBehavior="automatic"
-      //       style={backgroundStyle}>
-      //       {/* <View
-      //     style={{
-      //       backgroundColor: isDarkMode ? Colors.black : Colors.white,
-      //     }}>
-      //     <Section title="Step One">
-      //       Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-      //       screen and then come back to see your edits.
-      //     </Section>
-      //     <Section title="See Your Changes">
-      //       <ReloadInstructions />
-      //     </Section>
-      //     <Section title="Debug">
-      //       <DebugInstructions />
-      //     </Section>
-      //     <Section title="Learn More">
-      //       Read the docs to discover what to do next:
-      //     </Section>
-      //     <LearnMoreLinks />
-      //   </View> */}
-      //       <Text>test</Text>
-      //     </ScrollView>
-      //   )}
-      // </SafeAreaView>
     );
   }
 };
@@ -207,6 +183,15 @@ const styles = StyleSheet.create({
     alignContent: 'stretch',
     justifyContent: 'center',
   },
+  containerError: {
+    paddingVertical: 24,
+    height: '100%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  containerErrorText: {
+    color: 'white',
+  },
 
   sectionContainer: {
     marginTop: 32,
@@ -224,19 +209,11 @@ const styles = StyleSheet.create({
   highlight: {
     fontWeight: '700',
   },
-  containerError: {
-    paddingVertical: 24,
-    height: '100%',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
+
   logo: {
     width: 200,
     height: 100,
     top: 12,
-  },
-  containerErrorText: {
-    color: 'white',
   },
 });
 

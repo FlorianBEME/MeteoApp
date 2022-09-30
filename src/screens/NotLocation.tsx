@@ -7,8 +7,7 @@ import {
   Button,
 } from 'react-native';
 import React from 'react';
-import {LocationObject} from 'expo-location';
-import * as Location from 'expo-location';
+
 import {useDispatch, useSelector} from 'react-redux';
 
 import {
@@ -61,51 +60,9 @@ const styles = StyleSheet.create({
 export default function NotLocation({navigation}: any) {
   const dispatch = useDispatch();
 
-  const loadingPermission = useSelector(
-    (state: any) => state.appSlice.loadingPermission,
-  );
   const errorMsg = useSelector(
     (state: any) => state.appSlice.errorMessagePermission,
   );
-
-  //   // à extraire car répéter dans le component App.tsx
-  //   const requestLocationPermission = async () => {
-  //     dispatch(SET_LOADING_PERMISSION(true));
-
-  //     try {
-  //       let {status} = await Location.requestForegroundPermissionsAsync();
-
-  //       if (status !== 'granted') {
-  //         dispatch(
-  //           SET_ERROR_MESSAGE(
-  //             'Permission as denied is necessary to access this app.',
-  //           ),
-  //         );
-  //       } else {
-  //         let location = await Location.getCurrentPositionAsync({});
-  //         if (!location) {
-  //           dispatch(
-  //             SET_ERROR_MESSAGE(
-  //               'Permission as denied is necessary to access this app.',
-  //             ),
-  //           );
-  //         }
-  //         dispatch(CLEAR_ERROR_MESSAGE());
-  //         dispatch(SET_LOCATION(location));
-  //       }
-  //     } catch (e) {
-  //       console.error(e);
-  //       dispatch(
-  //         SET_ERROR_MESSAGE(
-  //           'Permission as denied is necessary to access this app.',
-  //         ),
-  //       );
-  //     }
-
-  //     setTimeout(() => {
-  //       dispatch(SET_LOADING_PERMISSION(false));
-  //     }, 1000);
-  //   };
 
   return (
     <View style={styles.containerLoading}>
@@ -121,7 +78,7 @@ export default function NotLocation({navigation}: any) {
             <View>
               <Text style={styles.containerErrorText}>{errorMsg}</Text>
               <Button
-                title="Activate Location"
+                title="Settings"
                 onPress={() => navigation.navigate('Settings')}></Button>
             </View>
           </View>
