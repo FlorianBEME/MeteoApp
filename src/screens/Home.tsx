@@ -85,7 +85,7 @@ export default function Home() {
     //   timezone: 7200,
     //   visibility: 10000,
     //   weather: [
-    //     {description: 'ciel dégagé', icon: '01d', id: 5000, main: 'Clear'},
+    //     {description: 'ciel dégagé', icon: '01d', id: 801, main: 'Clear'},
     //   ],
     //   wind: {deg: 290, speed: 2.06},
     // };
