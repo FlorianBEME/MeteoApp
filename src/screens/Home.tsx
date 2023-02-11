@@ -56,7 +56,7 @@ export default function Home() {
   };
 
   const fetchWeather = async () => {
-    const demo = true;
+    const demo = false;
     if (location && API_KEY && !demo) {
       axios
         .get(

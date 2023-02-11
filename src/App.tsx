@@ -104,8 +104,6 @@ const App = () => {
             'Permission as denied is necessary to access this app.',
           ),
         );
-        // }
-        // }
       }
     }
 
@@ -116,7 +114,8 @@ const App = () => {
 
   useEffect(() => {
     requestLocationPermission();
-    // getData();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -125,6 +124,7 @@ const App = () => {
       getLocation();
       dispatch(SET_LOADING_PERMISSION(false));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [permission]);
 
   if (loadingPermission) {
